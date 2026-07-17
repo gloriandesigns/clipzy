@@ -6,7 +6,6 @@
 [![Platform](https://img.shields.io/badge/platform-macOS-black.svg)](#-install)
 [![Swift](https://img.shields.io/badge/built%20with-Swift-orange.svg)](#-building-from-source)
 
-[简体中文 🇨🇳](./Resources/i18n/zh-Hans/README.md)
 
 <p align="center">
   <img src="./Resources/screenshots/main-full-screen.png" alt="Clipzy tray sitting in the notch" width="800">
