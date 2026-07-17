@@ -167,4 +167,7 @@ Consider dropping a star. It genuinely helps more people find it, and it costs y
 
 ---
 
-Built for people who are tired of losing what they just copied.
+Built for people who are tired of losing what they just copied. 
+
+- Made by Love & Curiosity, Glorian
+
