@@ -40,8 +40,10 @@ That's the whole thing. No accounts, no syncing to a server, no subscription. It
 - [x] Hover for an instant live preview, no extra clicks
 - [x] Click to copy, double-click a stack to open it, `⌘`-click to multi-select
 - [x] Configurable file retention (an hour, a day, or forever)
+- [x] Choose how the notch opens: click it, or just hover over it
 - [x] Works alongside your existing menu bar managers
 - [x] Open AirDrop directly from the notch
+- [x] Tells you when a new version is out, right in the tray
 - [x] Fully open source and 100% privacy-focused, nothing leaves your Mac
 - [x] Free, forever, if you build it yourself
 
@@ -94,7 +96,7 @@ That's the whole thing. No accounts, no syncing to a server, no subscription. It
 
 ## 🚀 Install
 
-Grab the latest build from [Releases](https://github.com/gloriandesigns-dev/clipzy/releases), unzip it, and drag `Clipzy.app` into your `Applications` folder.
+Grab the latest build from [Releases](https://github.com/gloriandesigns/clipzy/releases), unzip it, and drag `Clipzy.app` into your `Applications` folder.
 
 Clipzy isn't notarized by Apple (that needs a paid Developer account), so macOS will flag it. Depending on your Mac, you'll see one of two things:
 
@@ -108,6 +110,20 @@ xattr -cr /Applications/Clipzy.app
 
 Either way, this is only needed once. After that first launch, it opens normally every time, just like anything else.
 
+## ⚙️ Settings
+
+Everything's tweakable from the settings screen (click the `⋯` in the tray header, or hover-cycle to it):
+
+- **Open Notch By** — pick **Click** (default, tap the notch to open) or **Hover** (just move your mouse over it, no click needed)
+- **Language** — follows your system language, or pick one manually
+- **Launch at Login** — start Clipzy automatically when you log in
+- **Haptic Feedback** — subtle trackpad tap when the tray pops or opens
+- **File Storage Time** — how long items stick around: an hour, a day, forever, or a custom duration
+
+## 🔔 Staying Updated
+
+Clipzy checks in with GitHub every few hours. If a newer release is out, you'll see **"A new version is here"** right in the tray header, tap it and it opens the release page so you can grab the latest build. No background installer, no silent changes, you're always the one who decides to update.
+
 ## 🔨 Building from Source
 
 If you'd rather build it yourself (or the Release isn't out yet), here's how.
@@ -119,7 +135,7 @@ If you'd rather build it yourself (or the Release isn't out yet), here's how.
 ### Quick build (for daily use)
 
 ```bash
-git clone https://github.com/gloriandesigns-dev/clipzy.git
+git clone https://github.com/gloriandesigns/clipzy.git
 cd clipzy
 
 xcodebuild -project Clipzy.xcodeproj \

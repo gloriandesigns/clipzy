@@ -8,7 +8,7 @@
 import AppKit
 
 // Clipzy — originally forked from NotchDrop by Lakr233 (MIT)
-let productPage = URL(string: "https://github.com/gloriandesigns-dev/clipzy")!
+let productPage = URL(string: "https://github.com/gloriandesigns/clipzy")!
 let sponsorPage = URL(string: "https://github.com/sponsors/Lakr233")!
 
 let bundleIdentifier = Bundle.main.bundleIdentifier!

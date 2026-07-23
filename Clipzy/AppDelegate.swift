@@ -29,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         _ = EventMonitors.shared
         ClipboardCapture.startWatching()
+        UpdateChecker.shared.startPeriodicCheck()
         let timer = Timer.scheduledTimer(
             withTimeInterval: 1,
             repeats: true

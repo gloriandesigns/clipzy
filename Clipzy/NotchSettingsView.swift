@@ -35,6 +35,18 @@ struct NotchSettingsView: View {
             }
 
             HStack {
+                Text("Open Notch By: ")
+                Picker(String(), selection: $vm.openTrigger) {
+                    ForEach(NotchViewModel.OpenTrigger.allCases) { trigger in
+                        Text(trigger.localized).tag(trigger)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(width: 100)
+                Spacer()
+            }
+
+            HStack {
                 Text("File Storage Time: ")
                 Picker(String(), selection: $tvm.selectedFileStorageTime) {
                     ForEach(TrayDrop.FileStorageTime.allCases) { time in

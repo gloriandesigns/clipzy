@@ -98,8 +98,19 @@ extension NotchViewModel {
                 guard let self else { return }
                 let mouseLocation: NSPoint = NSEvent.mouseLocation
                 let aboutToOpen = deviceNotchRect.insetBy(dx: inset, dy: inset).contains(mouseLocation)
+                if aboutToOpen, openTrigger == .hover, status == .closed || status == .popping {
+                    // hover mode: skip the peek, go straight to fully opened
+                    notchOpen(.hover)
+                    return
+                }
                 if status == .closed, aboutToOpen { notchPop() }
                 if status == .popping, !aboutToOpen { notchClose() }
+                if status == .opened, openTrigger == .hover, !aboutToOpen,
+                   !notchOpenedRect.insetBy(dx: inset, dy: inset).contains(mouseLocation)
+                {
+                    // hover mode: leaving the whole tray area closes it, no click needed
+                    notchClose()
+                }
             }
             .store(in: &cancellables)
 

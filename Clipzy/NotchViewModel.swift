@@ -34,9 +34,24 @@ class NotchViewModel: NSObject, ObservableObject {
 
     enum OpenReason: String, Codable, Hashable, Equatable {
         case click
+        case hover
         case drag
         case boot
         case unknown
+    }
+
+    enum OpenTrigger: String, Codable, CaseIterable, Identifiable, Hashable {
+        case click
+        case hover
+
+        var id: String { rawValue }
+
+        var localized: String {
+            switch self {
+            case .click: NSLocalizedString("Click", comment: "")
+            case .hover: NSLocalizedString("Hover", comment: "")
+            }
+        }
     }
 
     enum ContentType: Int, Codable, Hashable, Equatable {
@@ -80,6 +95,9 @@ class NotchViewModel: NSObject, ObservableObject {
 
     @PublishedPersist(key: "hapticFeedback", defaultValue: true)
     var hapticFeedback: Bool
+
+    @PublishedPersist(key: "openTrigger", defaultValue: .click)
+    var openTrigger: OpenTrigger
 
     let hapticSender = PassthroughSubject<Void, Never>()
 

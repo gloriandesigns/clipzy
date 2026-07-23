@@ -47,7 +47,11 @@ struct TrayView: View {
                 )
                 .shadow(color: targeting ? Color.accentColor.opacity(0.5) : .clear, radius: 12)
             content
-                .padding()
+                // symmetric horizontal padding, extra bottom clearance so
+                // stack labels don't crowd the notch's rounded bottom corners
+                .padding(.horizontal, vm.spacing)
+                .padding(.top, vm.spacing)
+                .padding(.bottom, vm.spacing * 1.5)
         }
         .onHover { inside in
             if !inside { expandedCategories.removeAll() }
