@@ -56,11 +56,12 @@ struct TrayView: View {
         }
         // panel itself must claim all available space too, or the ZStack
         // still shrink-wraps around its tallest child regardless of what
-        // content above asks for
+        // content above asks for.
+        // NOTE: no extra padding here — NotchView already wraps the whole
+        // header+content card in a single .padding(vm.spacing). Adding a
+        // second padding pass here was the actual cause of the dead space
+        // around the dashed box: it was being inset twice.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, vm.spacing)
-        .padding(.top, vm.spacing)
-        .padding(.bottom, vm.spacing * 1.1)
         .onHover { inside in
             if !inside { expandedCategories.removeAll() }
         }
