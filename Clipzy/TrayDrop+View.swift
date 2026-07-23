@@ -47,9 +47,17 @@ struct TrayView: View {
                 )
                 .shadow(color: targeting ? Color.accentColor.opacity(0.5) : .clear, radius: 12)
             content
+                // content used to shrink-wrap to its own compact height,
+                // leaving loading/border (which match content's size) way
+                // smaller than the space the notch actually granted them.
+                // Filling here + centering makes stacks sit centered in
+                // the full box instead of floating with slack above.
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        // one shared inset for loading / border / content, so all three
-        // layers line up on the same bounds instead of drifting apart
+        // panel itself must claim all available space too, or the ZStack
+        // still shrink-wraps around its tallest child regardless of what
+        // content above asks for
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, vm.spacing)
         .padding(.top, vm.spacing)
         .padding(.bottom, vm.spacing * 1.1)
