@@ -94,15 +94,19 @@ That's the whole thing. No accounts, no syncing to a server, no subscription. It
 
 ## 🚀 Install
 
-Grab the latest build from [Releases](https://github.com/gloriandesigns-dev/clipzy/releases), unzip it, drag `Clipzy.app` into your `Applications` folder, and open it.
+Grab the latest build from [Releases](https://github.com/gloriandesigns-dev/clipzy/releases), unzip it, and drag `Clipzy.app` into your `Applications` folder.
 
-Since it's not notarized through the App Store, macOS will show a security warning the first time. Here's how to get past it:
+Clipzy isn't notarized by Apple (that needs a paid Developer account), so macOS will flag it. Depending on your Mac, you'll see one of two things:
 
-1. Right-click (or Control-click) `Clipzy.app` in Applications
-2. Choose **Open**
-3. Click **Open** again in the dialog that pops up
+**"Clipzy is damaged and can't be opened"** — this is Gatekeeper misreading an unsigned app's quarantine flag, not actual corruption. Fix it with one Terminal command, then open normally:
 
-After that first launch, it opens normally every time, just like anything else.
+```bash
+xattr -cr /Applications/Clipzy.app
+```
+
+**"Clipzy can't be opened because it is from an unidentified developer"** — right-click (or Control-click) `Clipzy.app`, choose **Open**, then click **Open** again in the dialog that pops up.
+
+Either way, this is only needed once. After that first launch, it opens normally every time, just like anything else.
 
 ## 🔨 Building from Source
 
