@@ -51,6 +51,9 @@ class TrayDrop: ObservableObject {
     var selectedFileStorageTime: FileStorageTime
 
     @Published var selection: Set<DropItem.ID> = []
+    /// last item explicitly clicked (⌘-click or plain click) — anchors a
+    /// following Shift-click into a range selection
+    private var lastInteractedID: DropItem.ID?
 
     var selectedURLs: [URL] {
         items.filter { selection.contains($0.id) }.map(\.storageURL)
@@ -58,6 +61,23 @@ class TrayDrop: ObservableObject {
 
     func toggleSelection(_ id: DropItem.ID) {
         if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
+        lastInteractedID = id
+    }
+
+    /// Shift-click: select everything between the last-interacted item and
+    /// `id`, scoped to `groupItems` (the visible, expanded stack the click
+    /// happened in) so range-select stays predictable across stacks.
+    func selectRange(in groupItems: [DropItem], to id: DropItem.ID) {
+        guard let anchor = lastInteractedID,
+              let anchorIndex = groupItems.firstIndex(where: { $0.id == anchor }),
+              let targetIndex = groupItems.firstIndex(where: { $0.id == id })
+        else {
+            toggleSelection(id)
+            return
+        }
+        let range = anchorIndex <= targetIndex ? anchorIndex ... targetIndex : targetIndex ... anchorIndex
+        for item in groupItems[range] { selection.insert(item.id) }
+        lastInteractedID = id
     }
 
     /// transitions (dust vanish) only fire inside withAnimation

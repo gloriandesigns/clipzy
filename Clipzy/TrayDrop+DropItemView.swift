@@ -2,7 +2,8 @@
 //  TrayDrop+DropItemView.swift
 //  Clipzy
 //
-//  Click = toggle selection, ⌥-click = delete, drag = move file out.
+//  Click = copy, ⌘-click = toggle selection, Shift-click = range-select
+//  within the stack, ⌥-click = delete, drag = move file out.
 //  Dragging a selected item drags the WHOLE selection.
 //  Removal disperses into dust (Pow vanish) — the Thanos snap.
 //
@@ -14,6 +15,9 @@ import UniformTypeIdentifiers
 
 struct DropItemView: View {
     let item: TrayDrop.DropItem
+    /// the full, ordered item list of the stack this item lives in —
+    /// needed so Shift-click knows what range to select
+    let groupItems: [TrayDrop.DropItem]
     @StateObject var vm: NotchViewModel
     @StateObject var tvm = TrayDrop.shared
 
@@ -65,7 +69,7 @@ struct DropItemView: View {
         .scaleEffect(hover ? 1.05 : 1.0)
         .animation(vm.animation, value: hover)
         .animation(vm.animation, value: selected)
-        .modifier(ItemInteraction(item: item, selected: selected, tvm: tvm, vm: vm) {
+        .modifier(ItemInteraction(item: item, groupItems: groupItems, selected: selected, tvm: tvm, vm: vm) {
             copied = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { copied = false }
         })
@@ -88,10 +92,12 @@ struct DropItemView: View {
 }
 
 /// Selected: AppKit layer drags the whole selection, tap deselects.
-/// Unselected: click = copy to clipboard, ⌘-click = select, ⌥-click = delete,
-/// drag = move this single item out.
+/// Unselected: click = copy to clipboard, ⌘-click = toggle select,
+/// Shift-click = select the range between the last click and this item,
+/// ⌥-click = delete, drag = move this single item out.
 private struct ItemInteraction: ViewModifier {
     let item: TrayDrop.DropItem
+    let groupItems: [TrayDrop.DropItem]
     let selected: Bool
     let tvm: TrayDrop
     let vm: NotchViewModel
@@ -113,6 +119,8 @@ private struct ItemInteraction: ViewModifier {
                     let flags = EventMonitors.shared.mouseDownFlags.value.union(NSEvent.modifierFlags)
                     if flags.contains(.option) {
                         tvm.delete(item.id)
+                    } else if flags.contains(.shift) {
+                        tvm.selectRange(in: groupItems, to: item.id)
                     } else if flags.contains(.command) {
                         tvm.toggleSelection(item.id)
                     } else {

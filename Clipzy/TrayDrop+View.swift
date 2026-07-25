@@ -97,10 +97,10 @@ struct TrayView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(height: 34)
-                    Text("Copy anything anywhere, or drag it here — it lands in this tray")
+                    Text("Copy anything anywhere, or drag it here so it lands in this tray")
                         .multilineTextAlignment(.center)
                         .font(.system(.headline, design: .rounded))
-                    Text("click = copy · 2×click stack = open · ⌘-click = select · ⌫ = delete")
+                    Text("Click Once = Copy • Double Click Stack = Open • ⌘ + Click to Select (or hold Shift to select a group) • Backspace = Delete")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -165,7 +165,7 @@ struct CategoryGroupView: View {
             if expanded {
                 HStack(spacing: vm.spacing / 2) {
                     ForEach(items) { item in
-                        DropItemView(item: item, vm: vm, tvm: tvm)
+                        DropItemView(item: item, groupItems: items, vm: vm, tvm: tvm)
                             .matchedGeometryEffect(id: item.id, in: namespace)
                     }
                 }

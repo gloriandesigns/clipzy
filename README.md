@@ -38,7 +38,7 @@ That's the whole thing. No accounts, no syncing to a server, no subscription. It
 - [x] Drag and drop files straight onto the notch
 - [x] Auto-sorts everything into Images, Media, and Text stacks
 - [x] Hover for an instant live preview, no extra clicks
-- [x] Click to copy, double-click a stack to open it, `⌘`-click to multi-select
+- [x] Click to copy, double-click a stack to open it, ⌘-click to select, Shift-click to select a range
 - [x] Configurable file retention (an hour, a day, or forever)
 - [x] Choose how the notch opens: click it, or just hover over it
 - [x] Works alongside your existing menu bar managers
