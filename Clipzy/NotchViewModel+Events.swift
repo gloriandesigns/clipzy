@@ -162,6 +162,18 @@ extension NotchViewModel {
                 output.apply()
             }
             .store(in: &cancellables)
+
+        $captureHotKeyEnabled
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { enabled in
+                if enabled {
+                    ClipboardCapture.registerHotKey()
+                } else {
+                    ClipboardCapture.unregisterHotKey()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func destroy() {

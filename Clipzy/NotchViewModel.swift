@@ -99,6 +99,13 @@ class NotchViewModel: NSObject, ObservableObject {
     @PublishedPersist(key: "openTrigger", defaultValue: .click)
     var openTrigger: OpenTrigger
 
+    // OFF by default — see the comment on ClipboardCapture.registerHotKey().
+    // Auto-capture already catches every copy without this; enabling it
+    // claims ⌘⇧C system-wide, which conflicts with other apps that use the
+    // same shortcut (Arc's "copy current URL" being the common one).
+    @PublishedPersist(key: "captureHotKeyEnabled", defaultValue: false)
+    var captureHotKeyEnabled: Bool
+
     let hapticSender = PassthroughSubject<Void, Never>()
 
     func notchOpen(_ reason: OpenReason) {

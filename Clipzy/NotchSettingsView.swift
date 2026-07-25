@@ -77,6 +77,13 @@ struct NotchSettingsView: View {
                 }
                 Spacer()
             }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Instant Capture Hotkey (⌘⇧C)", isOn: $vm.captureHotKeyEnabled)
+                Text("Off by default — Clipzy already catches every copy automatically. Turning this on claims ⌘⇧C system-wide, which conflicts with apps that use it themselves, e.g. Arc's \"copy current URL\".")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding()
         .transition(.scale(scale: 0.8).combined(with: .opacity))

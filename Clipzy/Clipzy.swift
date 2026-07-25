@@ -201,15 +201,33 @@ enum ClipboardCapture {
         }
     }
 
+    private static var hotKeyRef: EventHotKeyRef?
+    private static var hotKeyHandlerInstalled = false
+
+    /// Registers the system-wide ⌘⇧C capture shortcut. This is OFF by default
+    /// (see NotchViewModel.captureHotKeyEnabled) because a Carbon global hotkey
+    /// swallows the key combo for every app on the system, including the one
+    /// you're actually using — ⌘⇧C is "copy current URL" in Arc, and similar
+    /// things in other apps, so registering it here silently breaks those.
+    /// Auto-capture (startWatching, 1s pasteboard poll) already catches every
+    /// copy without needing this at all; this hotkey only exists for people
+    /// who want an instant, no-poll-delay manual trigger and don't mind the
+    /// tradeoff, so it's opt-in via Settings.
     static func registerHotKey() {
-        var eventType = EventTypeSpec(
-            eventClass: OSType(kEventClassKeyboard),
-            eventKind: UInt32(kEventHotKeyPressed)
-        )
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, _ -> OSStatus in
-            ClipboardCapture.captureNow()
-            return noErr
-        }, 1, &eventType, nil, nil)
+        guard hotKeyRef == nil else { return }
+
+        if !hotKeyHandlerInstalled {
+            var eventType = EventTypeSpec(
+                eventClass: OSType(kEventClassKeyboard),
+                eventKind: UInt32(kEventHotKeyPressed)
+            )
+            InstallEventHandler(GetApplicationEventTarget(), { _, _, _ -> OSStatus in
+                ClipboardCapture.captureNow()
+                return noErr
+            }, 1, &eventType, nil, nil)
+            hotKeyHandlerInstalled = true
+        }
+
         var ref: EventHotKeyRef?
         let hotKeyID = EventHotKeyID(signature: 0x5053_5459, id: 1) // 'PSTY'
         RegisterEventHotKey(
@@ -220,6 +238,13 @@ enum ClipboardCapture {
             0,
             &ref
         )
+        hotKeyRef = ref
+    }
+
+    static func unregisterHotKey() {
+        guard let ref = hotKeyRef else { return }
+        UnregisterEventHotKey(ref)
+        hotKeyRef = nil
     }
 
     static func captureNow() {

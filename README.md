@@ -119,6 +119,7 @@ Everything's tweakable from the settings screen (click the `⋯` in the tray hea
 - **Launch at Login** — start Clipzy automatically when you log in
 - **Haptic Feedback** — subtle trackpad tap when the tray pops or opens
 - **File Storage Time** — how long items stick around: an hour, a day, forever, or a custom duration
+- **Instant Capture Hotkey (⌘⇧C)** — off by default. Auto-capture already catches every copy within a second, so this only exists for people who want a zero-delay manual trigger. Turning it on claims ⌘⇧C system-wide, which will conflict with any other app using that shortcut (Arc's "copy current URL" being the most common one), so it's opt-in rather than a default
 
 ## 🔔 Staying Updated
 

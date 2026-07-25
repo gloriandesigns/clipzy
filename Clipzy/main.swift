@@ -62,7 +62,13 @@ do {
 
 _ = TrayDrop.shared
 TrayDrop.shared.cleanExpiredFiles()
-ClipboardCapture.registerHotKey()
+// only claim the system-wide ⌘⇧C shortcut if the user opted in — see the
+// comment on ClipboardCapture.registerHotKey() for why this defaults off
+if let data = FileStorage().data(forKey: "captureHotKeyEnabled"),
+   let enabled = try? JSONDecoder().decode(Bool.self, from: data), enabled
+{
+    ClipboardCapture.registerHotKey()
+}
 
 repeat {
     let executablePath = ProcessInfo.processInfo.arguments.first!
