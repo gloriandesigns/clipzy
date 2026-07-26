@@ -116,6 +116,10 @@ struct NotchView: View {
         }
         .background(dragDetector)
         .animation(vm.animation, value: vm.status)
+        // notchOpenedSize now varies by contentType (Settings needs more
+        // room) — animate that resize too, or switching to Settings snaps
+        // instead of growing smoothly
+        .animation(vm.animation, value: vm.contentType)
         .preferredColorScheme(.dark)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -150,6 +154,10 @@ struct NotchView: View {
             .frame(width: notchSize.width + vm.dropDetectorRange, height: notchSize.height + vm.dropDetectorRange)
             .onDrop(of: [.data], isTargeted: $dropTargeting) { _ in true }
             .onChange(of: dropTargeting) { isTargeted in
+                // same reasoning as TrayView's targeting handler: a drag
+                // reaching the notch at all should clear any leftover
+                // hover preview immediately, before the tray even expands
+                if isTargeted { TextPreviewPanel.shared.hide() }
                 if isTargeted, vm.status == .closed {
                     // Open the notch when a file is dragged over it
                     vm.notchOpen(.drag)

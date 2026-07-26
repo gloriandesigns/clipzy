@@ -108,6 +108,15 @@ private struct ItemInteraction: ViewModifier {
             content.overlay {
                 MultiDragView(
                     urls: tvm.selectedURLs,
+                    onDragStarted: {
+                        // small delay so we don't yank the SwiftUI view (and
+                        // the AppKit drag session riding on top of it) out
+                        // from under macOS mid-handoff — the drag already
+                        // has its own snapshot of the URLs by this point
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            tvm.selection.removeAll()
+                        }
+                    },
                     onTap: { tvm.toggleSelection(item.id) }
                 )
                 .accessibilityHidden(true)
@@ -126,6 +135,10 @@ private struct ItemInteraction: ViewModifier {
                     } else {
                         ClipzyCopy.copy([item])
                         onCopied()
+                        // still counts as an anchor, so "click A, then
+                        // Shift/Cmd+Shift-click C" ranges A...C even though
+                        // the plain click itself just copied
+                        tvm.noteInteraction(item.id)
                     }
                 }
         }

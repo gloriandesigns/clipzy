@@ -286,11 +286,14 @@ enum ClipboardCapture {
                     urls = [url]
                 }
             }
-            guard !urls.isEmpty else { return }
+            let newURLs = urls.filter { !TrayDrop.shared.isDuplicate(of: $0) }
+            guard !newURLs.isEmpty else { return }
             do {
-                let items = try urls.map { try TrayDrop.DropItem(url: $0) }
+                let items = try newURLs.map { try TrayDrop.DropItem(url: $0) }
                 DispatchQueue.main.async {
-                    items.forEach { TrayDrop.shared.items.updateOrInsert($0, at: 0) }
+                    for (item, sourceURL) in zip(items, newURLs) {
+                        TrayDrop.shared.insert(item, sourceURL: sourceURL)
+                    }
                     NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
                     NotificationCenter.default.post(name: .clipzyCaptured, object: nil)
                 }
@@ -310,8 +313,15 @@ enum ClipboardCapture {
 // MARK: - Copy to clipboard
 
 enum ClipzyCopy {
-    /// file URL + (for text) string rep on each pasteboard item:
-    /// Finder pastes files, editors paste text
+    /// Each pasteboard item carries the richest representation we can give
+    /// it: raw image bytes for images (not just a file-url string), plain
+    /// text for text, and a file-url on everything so Finder always gets a
+    /// real file too. Note: this is as far as we can push it from our
+    /// side — whether a given app's OWN paste handler reads more than one
+    /// clipboard item is entirely up to that app (several web upload boxes
+    /// only ever look at the first file/image on a paste event by design,
+    /// no clipboard trick changes that), but this maximizes the odds for
+    /// everything that *does* support multi-item paste.
     static func copy(_ items: [TrayDrop.DropItem]) {
         guard !items.isEmpty else { return }
         let pasteboard = NSPasteboard.general
@@ -319,9 +329,15 @@ enum ClipzyCopy {
         let pbItems: [NSPasteboardItem] = items.map { item in
             let p = NSPasteboardItem()
             if let text = item.previewText {
-                // text-only: a file-url rep makes editors paste a .txt attachment
                 p.setString(text, forType: .string)
             } else {
+                if let image = NSImage(contentsOf: item.storageURL),
+                   let tiff = image.tiffRepresentation,
+                   let rep = NSBitmapImageRep(data: tiff),
+                   let pngData = rep.representation(using: .png, properties: [:])
+                {
+                    p.setData(pngData, forType: .png)
+                }
                 p.setString(item.storageURL.absoluteString, forType: .fileURL)
             }
             return p

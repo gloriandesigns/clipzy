@@ -23,7 +23,15 @@ class NotchViewModel: NSObject, ObservableObject {
         extraBounce: 0.25,
         blendDuration: 0.125
     )
-    let notchOpenedSize: CGSize = .init(width: 600, height: 160)
+    /// Settings needs more vertical room than the tray/menu views — it's
+    /// grown over time into several rows and a caption, and cramming that
+    /// into the tray's height caused text to overflow the notch entirely.
+    var notchOpenedSize: CGSize {
+        switch contentType {
+        case .settings: .init(width: 600, height: 300)
+        case .normal, .menu: .init(width: 600, height: 160)
+        }
+    }
     let dropDetectorRange: CGFloat = 32
 
     enum Status: String, Codable, Hashable, Equatable {

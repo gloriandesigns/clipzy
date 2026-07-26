@@ -65,6 +65,12 @@ struct TrayView: View {
         .onHover { inside in
             if !inside { expandedCategories.removeAll() }
         }
+        .onChange(of: targeting) { isTargeting in
+            // macOS suppresses normal hover exit events during an active
+            // drag session, so a stale hover preview from before the drag
+            // started can otherwise stay glued on screen the whole time
+            if isTargeting { TextPreviewPanel.shared.hide() }
+        }
             .animation(vm.animation, value: tvm.items)
             .animation(vm.animation, value: tvm.isLoading)
             .animation(vm.animation, value: expandedCategories)
@@ -105,33 +111,54 @@ struct TrayView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                ScrollView(.horizontal) {
-                    HStack(alignment: .center, spacing: vm.spacing) {
-                        ForEach(groups, id: \.category) { group in
-                            CategoryGroupView(
-                                category: group.category,
-                                items: group.items,
-                                expanded: expandedCategories.contains(group.category),
-                                namespace: trayNamespace,
-                                vm: vm,
-                                tvm: tvm
-                            ) {
-                                if expandedCategories.contains(group.category) {
-                                    expandedCategories.remove(group.category)
-                                } else {
-                                    expandedCategories.insert(group.category)
+                // GeometryReader gives us the box's real width so the row
+                // can center itself as a group when everything fits, and
+                // fall back to its natural (wider) size — which ScrollView
+                // then scrolls — once it doesn't.
+                GeometryReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        HStack(alignment: .center, spacing: vm.spacing) {
+                            ForEach(groups, id: \.category) { group in
+                                CategoryGroupView(
+                                    category: group.category,
+                                    items: group.items,
+                                    expanded: expandedCategories.contains(group.category),
+                                    namespace: trayNamespace,
+                                    vm: vm,
+                                    tvm: tvm
+                                ) {
+                                    if expandedCategories.contains(group.category) {
+                                        expandedCategories.remove(group.category)
+                                    } else {
+                                        expandedCategories.insert(group.category)
+                                    }
                                 }
+                                .transition(.asymmetric(
+                                    insertion: .movingParts.boing.combined(with: .opacity),
+                                    removal: .clipzyBlurOut
+                                ))
                             }
-                            .transition(.asymmetric(
-                                insertion: .movingParts.boing.combined(with: .opacity),
-                                removal: .clipzyBlurOut
-                            ))
                         }
+                        .padding(.horizontal, vm.spacing)
+                        .frame(minWidth: proxy.size.width, alignment: .center)
                     }
-                    .padding(vm.spacing)
+                    .scrollIndicators(.automatic)
+                    // fades stacks out right at the box edges instead of
+                    // letting them spill past the dashed border while
+                    // scrolling
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: 0.035),
+                                .init(color: .black, location: 0.965),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                 }
-                .padding(-vm.spacing)
-                .scrollIndicators(.never)
             }
         }
     }

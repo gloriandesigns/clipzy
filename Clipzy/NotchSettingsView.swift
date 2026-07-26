@@ -12,8 +12,10 @@ struct NotchSettingsView: View {
     @StateObject var vm: NotchViewModel
     @StateObject var tvm: TrayDrop = .shared
 
+    private let rowSpacing: CGFloat = 12
+
     var body: some View {
-        VStack(spacing: vm.spacing) {
+        VStack(alignment: .leading, spacing: rowSpacing) {
             HStack {
                 Picker("Language: ", selection: $vm.selectedLanguage) {
                     ForEach(Language.allCases) { language in
@@ -23,16 +25,16 @@ struct NotchSettingsView: View {
                 .pickerStyle(MenuPickerStyle())
                 .frame(width: vm.selectedLanguage == .simplifiedChinese || vm.selectedLanguage == .traditionalChinese ? 220 : 160)
 
-                Spacer()
+                Spacer(minLength: 12)
                 LaunchAtLogin.Toggle {
                     Text(NSLocalizedString("Launch at Login", comment: ""))
                 }
 
-                Spacer()
+                Spacer(minLength: 12)
                 Toggle("Haptic Feedback ", isOn: $vm.hapticFeedback)
-
-                Spacer()
             }
+
+            Divider()
 
             HStack {
                 Text("Open Notch By: ")
@@ -43,10 +45,9 @@ struct NotchSettingsView: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(width: 100)
-                Spacer()
-            }
 
-            HStack {
+                Spacer(minLength: 24)
+
                 Text("File Storage Time: ")
                 Picker(String(), selection: $tvm.selectedFileStorageTime) {
                     ForEach(TrayDrop.FileStorageTime.allCases) { time in
@@ -66,24 +67,29 @@ struct NotchSettingsView: View {
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
-                    .frame(width: 200)
+                    .frame(width: 160)
                 }
-                Spacer()
+                Spacer(minLength: 0)
             }
 
-            HStack {
-                Button("Check for Updates…") {
-                    SparkleUpdater.shared.checkForUpdates()
-                }
-                Spacer()
-            }
+            Divider()
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Instant Capture Hotkey (⌘⇧C)", isOn: $vm.captureHotKeyEnabled)
-                Text("Off by default — Clipzy already catches every copy automatically. Turning this on claims ⌘⇧C system-wide, which conflicts with apps that use it themselves, e.g. Arc's \"copy current URL\".")
+                HStack {
+                    Toggle("Instant Capture Hotkey (⌘⇧C)", isOn: $vm.captureHotKeyEnabled)
+                    Spacer(minLength: 24)
+                    Button("Check for Updates…") {
+                        SparkleUpdater.shared.checkForUpdates()
+                    }
+                }
+                Text("Hotkey is off by default: Clipzy already captures every copy automatically. Turning it on claims ⌘⇧C system-wide, which conflicts with apps that use it themselves (e.g. Arc's \"copy current URL\").")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
             }
+
+            Spacer(minLength: 0)
         }
         .padding()
         .transition(.scale(scale: 0.8).combined(with: .opacity))

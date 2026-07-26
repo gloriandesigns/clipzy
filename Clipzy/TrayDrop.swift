@@ -12,7 +12,24 @@ class TrayDrop: ObservableObject {
     @Persist(key: "keepInterval", defaultValue: 3600 * 24)
     var keepInterval: TimeInterval
 
+    /// item.id -> content hash, so two identical copies (same bytes,
+    /// different UUID/timestamp — struct equality never matches on those)
+    /// don't both end up in the tray. Populated once at launch from
+    /// whatever's already persisted, then kept in sync on add/remove.
+    private var digestByID: [DropItem.ID: String] = [:]
+
     private init() {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else { return }
+            var digests: [DropItem.ID: String] = [:]
+            for item in self.items {
+                if let digest = item.storageURL.contentDigest() {
+                    digests[item.id] = digest
+                }
+            }
+            DispatchQueue.main.async { self.digestByID = digests }
+        }
+
         Publishers.CombineLatest3(
             $selectedFileStorageTime.removeDuplicates(),
             $customStorageTime.removeDuplicates(),
@@ -64,6 +81,15 @@ class TrayDrop: ObservableObject {
         lastInteractedID = id
     }
 
+    /// Plain click copies rather than selects, so it never touched
+    /// lastInteractedID — meaning "click item A, then Shift-click item C"
+    /// (the gesture most people reach for first) had no anchor to range
+    /// from. This lets a copy-click still count as the range's starting
+    /// point without changing what a plain click actually does.
+    func noteInteraction(_ id: DropItem.ID) {
+        lastInteractedID = id
+    }
+
     /// Shift-click: select everything between the last-interacted item and
     /// `id`, scoped to `groupItems` (the visible, expanded stack the click
     /// happened in) so range-select stays predictable across stacks.
@@ -107,6 +133,24 @@ class TrayDrop: ObservableObject {
 
     @Published var isLoading: Int = 0
 
+    /// True if this exact content (by bytes, not filename) is already in
+    /// the tray. Callers should skip creating a DropItem entirely when this
+    /// is true, so no duplicate file ever gets copied into storage.
+    func isDuplicate(of url: URL) -> Bool {
+        guard let digest = url.contentDigest() else { return false }
+        return digestByID.values.contains(digest)
+    }
+
+    /// Inserts a freshly-created item and remembers its content hash —
+    /// the one path all new items (capture, drag-in) should go through so
+    /// dedup stays in sync no matter where the item came from. Must be
+    /// called on the main thread (touches @Published items/digestByID).
+    func insert(_ item: DropItem, sourceURL: URL) {
+        items.updateOrInsert(item, at: 0)
+        guard let digest = sourceURL.contentDigest() else { return }
+        digestByID[item.id] = digest
+    }
+
     func load(_ providers: [NSItemProvider]) {
         assert(!Thread.isMainThread)
         DispatchQueue.main.asyncAndWait { isLoading += 1 }
@@ -114,10 +158,13 @@ class TrayDrop: ObservableObject {
             DispatchQueue.main.asyncAndWait { isLoading -= 1 }
             return
         }
+        let newURLs = urls.filter { !isDuplicate(of: $0) }
         do {
-            let items = try urls.map { try DropItem(url: $0) }
+            let items = try newURLs.map { try DropItem(url: $0) }
             DispatchQueue.main.async {
-                items.forEach { self.items.updateOrInsert($0, at: 0) }
+                for (item, sourceURL) in zip(items, newURLs) {
+                    self.insert(item, sourceURL: sourceURL)
+                }
                 self.isLoading -= 1
             }
         } catch {
@@ -161,6 +208,7 @@ class TrayDrop: ObservableObject {
 
         inEdit.remove(item)
         items = inEdit
+        digestByID.removeValue(forKey: item.id)
     }
 
     func removeAll() {
