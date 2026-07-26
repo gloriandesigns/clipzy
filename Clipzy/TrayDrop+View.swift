@@ -62,8 +62,15 @@ struct TrayView: View {
         // second padding pass here was the actual cause of the dead space
         // around the dashed box: it was being inset twice.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onHover { inside in
-            if !inside { expandedCategories.removeAll() }
+        // Collapsing an open stack on hover-exit sounded reasonable, but
+        // SwiftUI fires spurious "not inside" events on this outer onHover
+        // as the cursor crosses between the individual item views inside an
+        // expanded stack (each has its own hit-testing/gesture handling) —
+        // so stacks were snapping shut mid-browse with the cursor still
+        // sitting right on top of them. Tying the collapse to the notch
+        // itself closing is a signal that can't misfire like that.
+        .onChange(of: vm.status) { newStatus in
+            if newStatus != .opened { expandedCategories.removeAll() }
         }
         .onChange(of: targeting) { isTargeting in
             // macOS suppresses normal hover exit events during an active
@@ -120,7 +127,7 @@ struct TrayView: View {
             } else {
                 // left-aligned with leading padding, not centered as a
                 // group — scrolls naturally once it overflows the box
-                ScrollView(.horizontal, showsIndicators: true) {
+                ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .center, spacing: vm.spacing) {
                         ForEach(groups, id: \.category) { group in
                             CategoryGroupView(
@@ -147,8 +154,12 @@ struct TrayView: View {
                     .padding(.leading, vm.spacing)
                     .padding(.trailing, vm.spacing)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // No visible scrollbar — instead, a plain vertical mouse-
+                    // wheel scroll (the natural first instinct) drives this
+                    // row left/right directly. See ScrollWheelAxisTranslator.
+                    .horizontalWheelScrolling()
                 }
-                .scrollIndicators(.automatic)
+                .scrollIndicators(.hidden)
                 // fades stacks out right at the box edges instead of
                 // letting them spill past the dashed border while
                 // scrolling
