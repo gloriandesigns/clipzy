@@ -106,59 +106,64 @@ struct TrayView: View {
                     Text("Copy anything anywhere, or drag it here so it lands in this tray")
                         .multilineTextAlignment(.center)
                         .font(.system(.headline, design: .rounded))
-                    Text("Click Once = Copy • Double Click Stack = Open • ⌘ + Click to Select (or hold Shift to select a group) • Backspace = Delete")
+                    Text("Click = Copy • Double Click = Open Stack • ⌘ + Click/Shift = Select • ⌫ = Delete")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        // this line got clipped with a trailing "…" before —
+                        // fixedSize lets it wrap to a second line instead of
+                        // silently truncating if the box is ever narrower
+                        // than the full sentence
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12)
                 }
             } else {
-                // GeometryReader gives us the box's real width so the row
-                // can center itself as a group when everything fits, and
-                // fall back to its natural (wider) size — which ScrollView
-                // then scrolls — once it doesn't.
-                GeometryReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: true) {
-                        HStack(alignment: .center, spacing: vm.spacing) {
-                            ForEach(groups, id: \.category) { group in
-                                CategoryGroupView(
-                                    category: group.category,
-                                    items: group.items,
-                                    expanded: expandedCategories.contains(group.category),
-                                    namespace: trayNamespace,
-                                    vm: vm,
-                                    tvm: tvm
-                                ) {
-                                    if expandedCategories.contains(group.category) {
-                                        expandedCategories.remove(group.category)
-                                    } else {
-                                        expandedCategories.insert(group.category)
-                                    }
+                // left-aligned with leading padding, not centered as a
+                // group — scrolls naturally once it overflows the box
+                ScrollView(.horizontal, showsIndicators: true) {
+                    HStack(alignment: .center, spacing: vm.spacing) {
+                        ForEach(groups, id: \.category) { group in
+                            CategoryGroupView(
+                                category: group.category,
+                                items: group.items,
+                                expanded: expandedCategories.contains(group.category),
+                                namespace: trayNamespace,
+                                vm: vm,
+                                tvm: tvm
+                            ) {
+                                if expandedCategories.contains(group.category) {
+                                    expandedCategories.remove(group.category)
+                                } else {
+                                    expandedCategories.insert(group.category)
                                 }
-                                .transition(.asymmetric(
-                                    insertion: .movingParts.boing.combined(with: .opacity),
-                                    removal: .clipzyBlurOut
-                                ))
                             }
+                            .transition(.asymmetric(
+                                insertion: .movingParts.boing.combined(with: .opacity),
+                                removal: .clipzyBlurOut
+                            ))
                         }
-                        .padding(.horizontal, vm.spacing)
-                        .frame(minWidth: proxy.size.width, alignment: .center)
+                        Spacer(minLength: 0)
                     }
-                    .scrollIndicators(.automatic)
-                    // fades stacks out right at the box edges instead of
-                    // letting them spill past the dashed border while
-                    // scrolling
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0),
-                                .init(color: .black, location: 0.035),
-                                .init(color: .black, location: 0.965),
-                                .init(color: .clear, location: 1),
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .padding(.leading, vm.spacing)
+                    .padding(.trailing, vm.spacing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .scrollIndicators(.automatic)
+                // fades stacks out right at the box edges instead of
+                // letting them spill past the dashed border while
+                // scrolling
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.035),
+                            .init(color: .black, location: 0.965),
+                            .init(color: .clear, location: 1),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
             }
         }
     }
@@ -190,12 +195,16 @@ struct CategoryGroupView: View {
     var body: some View {
         VStack(spacing: 6) {
             if expanded {
-                HStack(spacing: vm.spacing / 2) {
+                // full spacing (not half) between individual items once a
+                // stack opens up, so they don't feel cramped next to each
+                // other
+                HStack(spacing: vm.spacing) {
                     ForEach(items) { item in
                         DropItemView(item: item, groupItems: items, vm: vm, tvm: tvm)
                             .matchedGeometryEffect(id: item.id, in: namespace)
                     }
                 }
+                .padding(.horizontal, 4)
             } else {
                 ZStack {
                     ForEach(Array(items.prefix(4).enumerated().reversed()), id: \.element.id) { index, item in
